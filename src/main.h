@@ -98,7 +98,7 @@ static const int64_t DARKSEND_POOL_MAX = (1999999.99*COIN);
 static const int64_t MaxPosClockDrift = 3 * 60;
 static const int64_t MaxPowClockDrift = 2 * 60 * 60;
 
-static const int nLuxProtocolSwitchHeight = 520000;
+static const int nLuxProtocolSwitchHeight = 600000;
 static const int nLuxProtocolSwitchHeightTestnet = 95150;
 
 /** The maximum size for mined blocks */
