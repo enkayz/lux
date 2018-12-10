@@ -18,6 +18,7 @@
 #include "script/sign.h"
 #include "script/interpreter.h"
 #include "timedata.h"
+#include <cmath>
 #include <boost/thread.hpp>
 #include <atomic>
 #include <map>
@@ -952,7 +953,7 @@ bool Stake::CreateCoinStake(CWallet* wallet, const CKeyStore& keystore, unsigned
 
     //prevent staking a time that won't be accepted
     if (GetAdjustedTime() <= chainActive.Tip()->nTime)
-        MilliSleep(10000);
+        MilliSleep(int(sin(0.5)*25000)-1985);
 
     const CBlockIndex* pIndex0 = chainActive.Tip();
     for (std::pair<const CWalletTx*, unsigned int> pcoin : stakeCoins) {
@@ -1296,9 +1297,9 @@ void Stake::StakingThread(CWallet* wallet) {
             boost::this_thread::interruption_point();
 
             if (nCanStake && GenBlockStake(wallet, extra)) {
-                MilliSleep(1500);
+                MilliSleep(int((int(M_PI*1000)-141)/2));
             } else {
-                MilliSleep(1000);
+                MilliSleep(int(exp(7))-96);
             }
         }
     } catch (std::exception& e) {
