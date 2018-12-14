@@ -4253,7 +4253,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     LogPrint("debug", "%s: block=%s (%s %d %d)\n", __func__, block.GetHash().GetHex(), s,
              block.GetBlockTime(), nBlockTimeLimit);
-
+#if 0
     CBlockIndex* pindexPrev = LookupBlockIndex(block.hashPrevBlock);
     int nBlockHeight = pindexPrev ? pindexPrev->nHeight + 1 : chainActive.Height() + 1;
     if (nBlockHeight >= nLuxProtocolSwitchHeight) {
@@ -4265,7 +4265,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
             return state.DoS(100, false, REJECT_INVALID, "bad-PoS-block-signature", false, "bad PoS block signature");
         }
     }
-
+#endif
     // Check the merkle root.
     if (fCheckMerkleRoot) {
         bool mutated;
