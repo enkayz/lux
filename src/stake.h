@@ -36,7 +36,9 @@ bool IsInvalidLuxPoS(const uint256& blockHash);
 
 struct CMutableTransaction;
 
-bool CheckCoinStakeTimestamp(uint32_t nTimeBlock);
+bool CheckCoinStakeTimestamp(int64_t nTimeBlock);
+
+bool CheckStakeBlockTimestamp(int64_t nTimeBlock);
 
 static const int STAKE_TIMESTAMP_MASK = 15;
 

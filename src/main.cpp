@@ -4437,6 +4437,10 @@ bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& sta
     if (pcheckpoint && nHeight < pcheckpoint->nHeight)
         return state.DoS(0, error("%s : forked chain older than last checkpoint (height %d)", __func__, nHeight));
 
+    // Check stake block timestamp
+    if (nHeight > consensusParams.nLastPOWBlock && !CheckStakeBlockTimestamp(block.GetBlockTime()))
+        return state.DoS(100, error("%s: invalid stake block timestamp (height %d)", __func__, nHeight));
+
 //    // Reject block.nVersion=1 blocks when 95% (75% on testnet) of the network has upgraded:
 //    if (block.nVersion < 2 &&
 //        CBlockIndex::IsSuperMajority(2, pindexPrev, )) {

@@ -39,7 +39,9 @@ using namespace std;
 static const unsigned int MODIFIER_INTERVAL = 10 * 60;
 static const unsigned int MODIFIER_INTERVAL_TESTNET = 60;
 
-bool CheckCoinStakeTimestamp(uint32_t nTimeBlock) { return (nTimeBlock & STAKE_TIMESTAMP_MASK) == 0; }
+bool CheckCoinStakeTimestamp(int64_t nTimeBlock) { return (nTimeBlock & STAKE_TIMESTAMP_MASK) == 0; }
+
+bool CheckStakeBlockTimestamp(int64_t nTimeBlock) { return CheckCoinStakeTimestamp(nTimeBlock); }
 
 // MODIFIER_INTERVAL_RATIO:
 // ratio of group interval length between the last group and the first group
