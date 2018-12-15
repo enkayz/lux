@@ -1139,6 +1139,7 @@ UniValue gettxout(const UniValue& params, bool fHelp)
             "  },\n"
             "  \"version\" : n,            (numeric) The version\n"
             "  \"coinbase\" : true|false   (boolean) Coinbase or not\n"
+            "  \"coinstake\" : true|false  (boolean) Coinstake or not\n"
             "}\n"
 
             "\nExamples:\n"
@@ -1188,6 +1189,7 @@ UniValue gettxout(const UniValue& params, bool fHelp)
     ret.push_back(Pair("scriptPubKey", o));
     ret.push_back(Pair("version", coins.nVersion));
     ret.push_back(Pair("coinbase", coins.fCoinBase));
+    ret.push_back(Pair("coinstake", coins.fCoinStake));
 
     return ret;
 }

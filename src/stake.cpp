@@ -39,9 +39,19 @@ using namespace std;
 static const unsigned int MODIFIER_INTERVAL = 10 * 60;
 static const unsigned int MODIFIER_INTERVAL_TESTNET = 60;
 
-bool CheckCoinStakeTimestamp(int64_t nTimeBlock) { return (nTimeBlock & STAKE_TIMESTAMP_MASK) == 0; }
+//bool CheckCoinStakeTimestamp(int64_t nTimeBlock, int64_t nTimeTx) { return (nTimeBlock & STAKE_TIMESTAMP_MASK) == 0; }
+bool CheckCoinStakeTimestamp(int64_t nTimeBlock, int64_t nTimeTx){
+    static CBlockIndex* pindexPrev;
+    const Consensus::Params& params = Params().GetConsensus();
+    const int nBlockHeight = (pindexPrev ? pindexPrev->nHeight : chainActive.Height()) + 1;
+    const int nNewPoSHeight = IsTestNet() ? nLuxProtocolSwitchHeightTestnet : nLuxProtocolSwitchHeight;
+    if (nBlockHeight < nNewPoSHeight) // could be skipped if height < last checkpoint
+        return (nTimeBlock == nTimeTx);
+    return (nTimeBlock == nTimeTx) && ((nTimeTx & params.STAKE_TIMESTAMP_MASK) == 0);
 
-bool CheckStakeBlockTimestamp(int64_t nTimeBlock) { return CheckCoinStakeTimestamp(nTimeBlock); }
+}
+
+bool CheckStakeBlockTimestamp(int64_t nTimeBlock) { return CheckCoinStakeTimestamp(nTimeBlock, nTimeBlock); }
 
 // MODIFIER_INTERVAL_RATIO:
 // ratio of group interval length between the last group and the first group

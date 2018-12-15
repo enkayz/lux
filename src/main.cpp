@@ -4253,12 +4253,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     LogPrint("debug", "%s: block=%s (%s %d %d)\n", __func__, block.GetHash().GetHex(), s,
              block.GetBlockTime(), nBlockTimeLimit);
-#if 0
+#if 1
     CBlockIndex* pindexPrev = LookupBlockIndex(block.hashPrevBlock);
     int nBlockHeight = pindexPrev ? pindexPrev->nHeight + 1 : chainActive.Height() + 1;
     if (nBlockHeight >= nLuxProtocolSwitchHeight) {
         // Check block time, reject far future blocks.
-        if (stake->CheckTimestamp(block.GetBlockTime(), (int64_t)block.vtx[1].nTime) > nBlockTimeLimit)
+        if (block.IsProofOfStake() && !CheckCoinStakeTimestamp(block.GetBlockTime(), block.vtx[1].nTime))
             return state.DoS(100, error("CheckBlock() : coinbase timestamp violation nTimeBlock=% nTimeTx=%u", block.GetBlockTime(), (int64_t)block.vtx[1].nTime));
         // Check proof-of-stake block signature
         if (fCheckSig && !block.CheckBlockSignature()) {
