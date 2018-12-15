@@ -2082,6 +2082,32 @@ CAmount CWallet::GetImmatureBalance() const
     return nTotal;
 }
 
+CAmount CWalletTx::GetImmatureStakeCredit(bool fUseCache) const
+{
+    if (IsCoinStake() && GetBlocksToMaturity() > 0 && IsInMainChain()){
+        if (fUseCache && fImmatureStakeCreditCached)
+            return nImmatureStakeCreditCached;
+        nImmatureStakeCreditCached = pwallet->GetCredit(*this, ISMINE_SPENDABLE);
+        fImmatureStakeCreditCached = true;
+        return nImmatureStakeCreditCached;
+    }
+    return 0;
+}
+
+CAmount CWallet::GetStakingBalance() const
+{
+    CAmount nTotal = 0;
+    {
+        LOCK2(cs_main, cs_wallet);
+        for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it)
+        {
+            const CWalletTx* pcoin = &(*it).second;
+            nTotal += pcoin->GetImmatureStakeCredit();
+        }
+    }
+    return nTotal;
+}
+
 CAmount CWallet::GetWatchOnlyBalance() const
 {
     CAmount nTotal = 0;

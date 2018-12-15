@@ -589,6 +589,7 @@ public:
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
+    CAmount GetStakingBalance() const;
     CAmount GetAnonymizableBalance() const;
     CAmount GetAnonymizedBalance() const;
     double GetAverageAnonymizedRounds() const;
@@ -937,6 +938,7 @@ public:
     mutable bool fDebitCached;
     mutable bool fCreditCached;
     mutable bool fImmatureCreditCached;
+    mutable bool fImmatureStakeCreditCached;
     mutable bool fAvailableCreditCached;
     mutable bool fAnonymizableCreditCached;
     mutable bool fAnonymizedCreditCached;
@@ -950,6 +952,7 @@ public:
     mutable CAmount nDebitCached;
     mutable CAmount nCreditCached;
     mutable CAmount nImmatureCreditCached;
+    mutable CAmount nImmatureStakeCreditCached;
     mutable CAmount nAvailableCreditCached;
     mutable CAmount nAnonymizableCreditCached;
     mutable CAmount nAnonymizedCreditCached;
@@ -996,6 +999,7 @@ public:
         fDebitCached = false;
         fCreditCached = false;
         fImmatureCreditCached = false;
+        fImmatureStakeCreditCached = false;
         fAvailableCreditCached = false;
         fAnonymizableCreditCached = false;
         fAnonymizedCreditCached = false;
@@ -1009,6 +1013,7 @@ public:
         nDebitCached = 0;
         nCreditCached = 0;
         nImmatureCreditCached = 0;
+        nImmatureStakeCreditCached = 0;
         nAvailableCreditCached = 0;
         nAnonymizableCreditCached = 0;
         nAnonymizedCreditCached = 0;
@@ -1077,6 +1082,7 @@ public:
         fWatchDebitCached = false;
         fWatchCreditCached = false;
         fAvailableWatchCreditCached = false;
+        fImmatureStakeCreditCached = false;
         fImmatureWatchCreditCached = false;
         fDebitCached = false;
         fChangeCached = false;
@@ -1119,7 +1125,7 @@ public:
     CAmount GetCredit(const isminefilter& filter) const
     {
         // Must wait until coinbase is safely deep enough in the chain before valuing it
-        if (IsCoinBase() && GetBlocksToMaturity() > 0)
+        if (IsCoinGenerated() && GetBlocksToMaturity() > 0)
             return 0;
 
         int64_t credit = 0;
@@ -1157,6 +1163,8 @@ public:
 
         return 0;
     }
+
+    CAmount GetImmatureStakeCredit(bool fUseCache=true) const;
 
     CAmount GetAvailableCredit(bool fUseCache = true) const
     {
