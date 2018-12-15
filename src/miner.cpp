@@ -229,7 +229,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlockWithKey(CReserveKe
     if (!reservekey.GetReservedKey(pubkey, true))
         return NULL;
 
-    CScript scriptPubKey = CScript() << ToByteVector(pubkey) << OP_CHECKSIG;
+    CScript scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkey) << OP_EQUALVERIFY << OP_CHECKSIG;
     return CreateNewBlock(scriptPubKey, fMineWitnessTx, fProofOfStake, pTotalFees, txProofTime, nTimeLimit);
 }
 
