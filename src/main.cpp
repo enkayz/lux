@@ -6542,8 +6542,9 @@ static bool ProcessMessage(CNode* pfrom, const string &strCommand, CDataStream& 
             mempool.check(pcoinsTip);
             RelayTransaction(tx);
             vWorkQueue.push_back(inv.hash);
+#if 0
             vEraseQueue.push_back(inv.hash);
-
+#endif
             LogPrint("mempool", "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u)\n",
                 pfrom->id,
                 tx.GetHash().ToString(),
@@ -6566,9 +6567,9 @@ static bool ProcessMessage(CNode* pfrom, const string &strCommand, CDataStream& 
                     // resolution (that is, feeding people an invalid transaction based on LegitTxX in order to get
                     // anyone relaying LegitTxX banned)
                     CValidationState stateDummy;
-
+#if 0
                     vEraseQueue.push_back(orphanHash);
-
+#endif
                     if (setMisbehaving.count(fromPeer))
                         continue;
                     if (AcceptToMemoryPool(mempool, stateDummy, orphanTx, true, &fMissingInputs2)) {
@@ -6576,6 +6577,7 @@ static bool ProcessMessage(CNode* pfrom, const string &strCommand, CDataStream& 
                         RelayTransaction(orphanTx);
                         vWorkQueue.push_back(orphanHash);
                         vEraseQueue.push_back(orphanHash);
+
                     } else if (!fMissingInputs2) {
                         int nDos = 0;
                         if (stateDummy.IsInvalid(nDos) && nDos > 0 && (!state.CorruptionPossible() || State(fromPeer)->fHaveWitness)) {
@@ -6588,7 +6590,6 @@ static bool ProcessMessage(CNode* pfrom, const string &strCommand, CDataStream& 
                         // Probably non-standard or insufficient fee/priority
                         LogPrint("mempool", "   removed orphan tx %s\n", orphanHash.ToString());
                         vEraseQueue.push_back(orphanHash);
-
                     }
                     mempool.check(pcoinsTip);
                 }
