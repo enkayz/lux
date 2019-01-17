@@ -2121,7 +2121,11 @@ void ThreadCheckDarkSendPool() {
                 segfaults from this code without the cs_main lock.
             */
             {
-
+                vector<CNode*> vNodesCopy;
+                {
+                    LOCK(cs_vNodes);
+                    vNodesCopy = vNodes;
+                }
                 LOCK(cs_masternodes);
                 vector<CMasterNode>::iterator it = vecMasternodes.begin();
                 //check them separately
@@ -2133,12 +2137,13 @@ void ThreadCheckDarkSendPool() {
                 int count = vecMasternodes.size();
                 int i = 0;
 
+
                 for (CMasterNode mn : vecMasternodes) {
 
                     if (mn.addr.IsRFC1918()) continue; //local network
                     if (mn.IsEnabled()) {
                         if (fDebug) LogPrintf("Sending masternode entry - %s \n", mn.addr.ToString().c_str());
-                        for (CNode * pnode : vNodes) {
+                        for (CNode * pnode : vNodesCopy) {
                             if (pnode)
                                 pnode->PushMessage("dsee", mn.vin, mn.addr, mn.sig, mn.now, mn.pubkey, mn.pubkey2, count, i, mn.lastTimeSeen, mn.protocolVersion);
                         }
