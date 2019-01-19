@@ -337,6 +337,7 @@ map<NodeId, CNodeState> mapNodeState;
 // Requires cs_main.
 CNodeState* State(NodeId pnode)
 {
+    AssertLockHeld(cs_main);
     map<NodeId, CNodeState>::iterator it = mapNodeState.find(pnode);
     if (it == mapNodeState.end())
         return NULL;
@@ -6501,6 +6502,40 @@ static bool ProcessMessage(CNode* pfrom, const string &strCommand, CDataStream& 
         ProcessGetData(pfrom, chainparams.GetConsensus());
     }
 
+    else if (strCommand == "getheaders" && chainparams.HeadersFirstSyncingActive()) {
+        CBlockLocator locator;
+        uint256 hashStop;
+        vRecv >> locator >> hashStop;
+
+        LOCK(cs_main);
+
+        if (IsInitialBlockDownload())
+            return true;
+
+        CBlockIndex* pindex = NULL;
+        if (locator.IsNull()) {
+            // If locator is null, return the hashStop block
+            pindex = LookupBlockIndex(hashStop);
+            if (!pindex)
+                return true;
+        } else {
+            // Find the last block the caller has in the main chain
+            pindex = FindForkInGlobalIndex(chainActive, locator);
+            if (pindex)
+                pindex = chainActive.Next(pindex);
+        }
+
+        // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
+        vector<CBlock> vHeaders;
+        int nLimit = MAX_HEADERS_RESULTS;
+        LogPrintf("getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->id);
+        for (; pindex; pindex = chainActive.Next(pindex)) {
+            vHeaders.push_back(pindex->GetBlockHeader());
+            if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
+                break;
+        }
+        pfrom->PushMessage("headers", vHeaders);
+    }
 
     else if (strCommand == "getblocks" || strCommand == "getheaders") {
         CBlockLocator locator;
@@ -6535,41 +6570,7 @@ static bool ProcessMessage(CNode* pfrom, const string &strCommand, CDataStream& 
     }
 
 
-    else if (strCommand == "headers" && chainparams.HeadersFirstSyncingActive()) {
-        CBlockLocator locator;
-        uint256 hashStop;
-        vRecv >> locator >> hashStop;
 
-        LOCK(cs_main);
-
-        if (IsInitialBlockDownload())
-            return true;
-
-        CBlockIndex* pindex = NULL;
-        if (locator.IsNull()) {
-            // If locator is null, return the hashStop block
-            pindex = LookupBlockIndex(hashStop);
-            if (!pindex)
-                return true;
-        } else {
-            // Find the last block the caller has in the main chain
-            pindex = FindForkInGlobalIndex(chainActive, locator);
-            if (pindex)
-                pindex = chainActive.Next(pindex);
-        }
-
-        // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
-        vector<CBlock> vHeaders;
-        int nLimit = MAX_HEADERS_RESULTS;
-        if (fDebug)
-            LogPrintf("getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.ToString(), pfrom->id);
-        for (; pindex; pindex = chainActive.Next(pindex)) {
-            vHeaders.push_back(pindex->GetBlockHeader());
-            if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
-                break;
-        }
-        pfrom->PushMessage("headers", vHeaders);
-    }
 
 
     else if (strCommand == "tx") {
@@ -6695,16 +6696,20 @@ static bool ProcessMessage(CNode* pfrom, const string &strCommand, CDataStream& 
         std::vector<CBlockHeader> headers;
 
         // Bypass the normal CBlock deserialization, as we don't want to risk deserializing 2000 full blocks.
+        LogPrintf("Testing 1\n");
         unsigned int nCount = ReadCompactSize(vRecv);
+        LogPrintf("headers message size = %u\n", nCount);
         if (nCount > MAX_HEADERS_RESULTS) {
             Misbehaving(pfrom->GetId(), 20);
             return error("headers message size = %u", nCount);
         }
+        LogPrintf("Testing 2\n");
         headers.resize(nCount);
         for (unsigned int n = 0; n < nCount; n++) {
             vRecv >> headers[n];
             ReadCompactSize(vRecv); // ignore tx count; assume it is 0.
         }
+        LogPrintf("Testing 3\n");
 
         LOCK(cs_main);
 
